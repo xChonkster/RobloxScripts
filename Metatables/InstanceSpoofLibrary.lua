@@ -105,13 +105,10 @@ local writeable = make_writeable or setreadonly
 local readonly = make_readonly or setreadonly
 
 local gameMT = getrawmetatable(game)
-local env = {
-    ["__index"] = gameMT.__index,
-    ["__newindex"] = gameMT.__newindex,
-    ["__namecall"] = gameMT.__namecall
-}
 writeable(gameMT, false)
-hookmetamethod(gameMT, "__namecall", function(Instance, ...) -- < used for monitoring hooks being added > --
+
+local old_namecall;
+old_namecall = hookmetamethod(game, "__namecall", function(Instance, ...) -- < used for monitoring hooks being added > --
     if checkcaller() then
         local Method, Args = getnamecallmethod(), {...}
         for HookIndex, HookValue in pairs(AvailableHooks) do
@@ -121,10 +118,11 @@ hookmetamethod(gameMT, "__namecall", function(Instance, ...) -- < used for monit
             end
         end
     end
-    return env.__namecall(Instance, ...)
+    return old_namecall(Instance, ...)
 end)
 
-hookmetamethod(gameMT, "__index", function(Instance, Property, ...) -- < used for monitoring hooks being added > --
+local old_index;
+old_index = hookmetamethod(game, "__index", function(Instance, Property, ...) -- < used for monitoring hooks being added > --
     for HookIndex, HookValue in pairs(Hooks) do
         if Property == HookValue.Property and Instance == HookValue.Instance then
             if HookValue.HookType == "AddPropertyGetHook" then
@@ -135,10 +133,11 @@ hookmetamethod(gameMT, "__index", function(Instance, Property, ...) -- < used fo
             end
         end
     end
-    return env.__index(Instance, Property, ...)
+    return old_index(Instance, Property, ...)
 end)
 
-hookmetamethod(gameMT, "__newindex", function(Instance, Property, Value, ...) -- < used for monitoring hooks being added > --
+local old_newindex;
+old_newindex = hookmetamethod(game, "__newindex", function(Instance, Property, Value, ...) -- < used for monitoring hooks being added > --
     for HookIndex, HookValue in pairs(Hooks) do
         if Property == HookValue.Property and Instance == HookValue.Instance then
             if HookValue.HookType == "LockProperty" then
@@ -153,7 +152,7 @@ hookmetamethod(gameMT, "__newindex", function(Instance, Property, Value, ...) --
             end
         end
     end
-    return env.__newindex(Instance, Property, Value, ...)
+    return old_newindex(Instance, Property, Value, ...)
 end)
 
 readonly(gameMT, true)
