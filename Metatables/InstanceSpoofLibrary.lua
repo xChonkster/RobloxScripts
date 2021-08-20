@@ -111,7 +111,7 @@ local env = {
     ["__namecall"] = gameMT.__namecall
 }
 writeable(gameMT, false)
-gameMT.__namecall = newcclosure(function(Instance, ...) -- < used for monitoring hooks being added > --
+hookmetamethod(gameMT, "__namecall", function(Instance, ...) -- < used for monitoring hooks being added > --
     if checkcaller() then
         local Method, Args = getnamecallmethod(), {...}
         for HookIndex, HookValue in pairs(AvailableHooks) do
@@ -123,7 +123,8 @@ gameMT.__namecall = newcclosure(function(Instance, ...) -- < used for monitoring
     end
     return env.__namecall(Instance, ...)
 end)
-gameMT.__index = newcclosure(function(Instance, Property, ...) -- < used for monitoring hooks being added > --
+
+hookmetamethod(gameMT, "__index", function(Instance, Property, ...) -- < used for monitoring hooks being added > --
     for HookIndex, HookValue in pairs(Hooks) do
         if Property == HookValue.Property and Instance == HookValue.Instance then
             if HookValue.HookType == "AddPropertyGetHook" then
@@ -136,7 +137,8 @@ gameMT.__index = newcclosure(function(Instance, Property, ...) -- < used for mon
     end
     return env.__index(Instance, Property, ...)
 end)
-gameMT.__newindex = newcclosure(function(Instance, Property, Value, ...) -- < used for monitoring hooks being added > --
+
+hookmetamethod(gameMT, "__newindex", function(Instance, Property, Value, ...) -- < used for monitoring hooks being added > --
     for HookIndex, HookValue in pairs(Hooks) do
         if Property == HookValue.Property and Instance == HookValue.Instance then
             if HookValue.HookType == "LockProperty" then
@@ -153,4 +155,5 @@ gameMT.__newindex = newcclosure(function(Instance, Property, Value, ...) -- < us
     end
     return env.__newindex(Instance, Property, Value, ...)
 end)
+
 readonly(gameMT, true)
