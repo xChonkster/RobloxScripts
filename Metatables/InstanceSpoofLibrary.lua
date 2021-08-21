@@ -1,3 +1,6 @@
+if InstanceSpoofLib then return end
+getgenv().InstanceSpoofLib = {}
+
 local Hooks = {} -- < stored hooks > --
 
 local Hooking = {}
