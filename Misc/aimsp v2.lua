@@ -17,29 +17,6 @@ local raycast_params_new = RaycastParams.new
 local enum_rft_blk = Enum.RaycastFilterType.Blacklist
 local glass = Enum.Material.Glass
 
-local white = color3_new(255, 255, 255)
-local green = color3_new(0, 255, 0)
-
-local pi = math.pi
-
-local players = game:GetService("Players")
-local run_service = game:GetService("RunService")
-local workspace = game:GetService("Workspace")
-local uis = game:GetService("UserInputService")
-local rep_storage = game:GetService("ReplicatedStorage")
-
-local frame_wait = run_service.RenderStepped
-
-local local_player = players.LocalPlayer
-local mouse = local_player:GetMouse()
-local dummy_part = instance_new("Part", nil)
-
-local reverse_camera = instance_new("Camera")
-
-local camera = workspace:FindFirstChildOfClass("Camera")
-local screen_size = camera.ViewportSize
-local center_screen = vector2_new((screen_size.X / 2), (screen_size.Y / 2))
-
 --[[
     todo
 
@@ -149,6 +126,29 @@ local _aimsp_settings; _aimsp_settings = {
 }
 
 --<- settings ->--
+
+local white = color3_new(255, 255, 255)
+local green = color3_new(0, 255, 0)
+
+local pi = math.pi
+
+local players = game:GetService("Players")
+local run_service = game:GetService("RunService")
+local workspace = game:GetService("Workspace")
+local uis = game:GetService("UserInputService")
+local rep_storage = game:GetService("ReplicatedStorage")
+
+local frame_wait = run_service.RenderStepped
+
+local local_player = players.LocalPlayer
+local mouse = local_player:GetMouse()
+local dummy_part = instance_new("Part", nil)
+
+local reverse_camera = instance_new("Camera")
+
+local camera = workspace:FindFirstChildOfClass("Camera")
+local screen_size = camera.ViewportSize
+local center_screen = vector2_new((screen_size.X / 2), (screen_size.Y / 2))
 
 if getgenv().aimsp_settings then 
     getgenv().aimsp_settings = _aimsp_settings; 
