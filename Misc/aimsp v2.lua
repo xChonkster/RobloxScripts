@@ -16,6 +16,7 @@ local instance_new = Instance.new
 local raycast_params_new = RaycastParams.new
 local enum_rft_blk = Enum.RaycastFilterType.Blacklist
 local glass = Enum.Material.Glass
+local string_find = string.find
 
 --[[
     todo
@@ -920,10 +921,12 @@ frame_wait:Connect(function()
                         })
                     else
                         for idx, val in pairs(objects.foot_circles) do
-                            utility.update_drawing(objects.foot_circles, idx, {
-                                Visible = false,
-                                instance = "Line";
-                            })
+                            if string_find(idx, plr_char:GetDebugId()) then
+                                utility.update_drawing(objects.foot_circles, idx, {
+                                    Visible = false,
+                                    instance = "Line";
+                                })
+                            end
                         end
                     end
                 end
