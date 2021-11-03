@@ -25,6 +25,14 @@ local glass = Enum.Material.Glass
 
 --<- settings ->--
 
+--[[
+    how to modify settings
+
+    most options will have a value that hold either "true" or "false" (without quotes)
+
+    true stands for yes and false stands for no
+]]
+
 local _aimsp_settings; _aimsp_settings = {
 
     -- aimbot settings
@@ -111,6 +119,7 @@ local _aimsp_settings; _aimsp_settings = {
         length = 8;
     },
     tracers = true,
+    foot_circle = false, -- (laggy)
     looking_at_tracers = {
         use = true,
 
@@ -169,6 +178,7 @@ local objects; objects = {
         right = nil,
         left = nil,
     },
+    foot_circles = {},
     look_at = {
         tracer = nil,
         point = nil;
@@ -229,6 +239,15 @@ local utility; utility = {
             Visible = false,
             instance = "Text";
         })
+
+        if aimsp_settings.foot_circle then
+            for idx, val in pairs(objects.foot_circles) do
+                utility.update_drawing(objects.foot_circles, idx, {
+                    Visible = false,
+                    instance = "Line";
+                })
+            end
+        end
     end,
 
     update = function(str)
@@ -243,11 +262,7 @@ local utility; utility = {
     end,
 
     is_inside_fov = function(point)
-        if aimsp_settings.rage_mode.use then
-            return true
-        end
-
-        return (point.x - objects.fov.Position.X) ^ 2 + (point.y - objects.fov.Position.Y) ^ 2 <= objects.fov.Radius ^ 2
+        return aimsp_settings.rage_mode.use or ((point.x - objects.fov.Position.X) ^ 2 + (point.y - objects.fov.Position.Y) ^ 2 <= objects.fov.Radius ^ 2)
     end,
     
     to_screen = function(point)
@@ -258,6 +273,24 @@ local utility; utility = {
         end
 
         return vector2_new(screen_pos.X, screen_pos.Y), screen_pos, in_screen
+    end,
+
+    get_vertices = function(base_position, mul)
+        local size = vector3_new(1, 1, 1) * mul
+    
+        local vertices = {}
+    
+        vertices.top = base_position + vector3_new(0, 0, size.Z)
+        vertices.bottom = base_position + vector3_new(0, 0, -size.Z)
+        vertices.right = base_position + vector3_new(-size.X, 0, 0)
+        vertices.left = base_position + vector3_new(size.X, 0, 0)
+        
+        vertices.corner1 = base_position + (vector3_new(0, 0, size.Z) + vector3_new(-size.Z, 0, 0)) / 1.5
+        vertices.corner3 = base_position + (vector3_new(0, 0, -size.Z) + vector3_new(size.Z, 0, 0)) / 1.5
+        vertices.corner4 = base_position + (vector3_new(size.X, 0, 0) + vector3_new(0, 0, size.Z)) / 1.5
+        vertices.corner2 = base_position + (vector3_new(-size.X, 0, 0) + vector3_new(0, 0, -size.Z)) / 1.5
+        
+        return vertices
     end,
 
     is_part_visible = function(origin_part, part)
@@ -487,6 +520,10 @@ elseif game.PlaceId == 18164449 then -- base wars
 elseif game.PlaceId == 292439477 then -- phantom forces
     get_players = function()
         local leaderboard = local_player.PlayerGui.Leaderboard.Main -- ik you're looking pf devs ;)
+        local folders = { -- hello again LOL
+            Phantoms = "Bright blue",
+            Ghosts = "Bright orange";
+        }
 
         if leaderboard then
             if aimsp_settings.team_check then
@@ -494,7 +531,7 @@ elseif game.PlaceId == 292439477 then -- phantom forces
                     return leaderboard.Ghosts.DataFrame.Data[local_player.Name]
                 end)
 
-                return workspace.Players[(is_ghost and "Phantoms") or "Ghosts"]:GetChildren()
+                return workspace.Players[folders[(is_ghost and "Phantoms") or "Ghosts"]]:GetChildren()
             else
                 local instance_table = {}
 
@@ -711,13 +748,15 @@ frame_wait:Connect(function()
             local plr_char = ((aimsp_settings.loop_all_humanoids or debounces.custom_players) and plr) or plr.Character
             if plr_char == nil then continue; end
 
-            local root_part = plr_char:FindFirstChild("HumanoidRootPart") or plr_char:FindFirstChild("UpperTorso") or plr_char:FindFirstChild("LowerTorso") or plr_char:FindFirstChild("Torso") or plr_char.PrimaryPart
+            local root_part = plr_char:FindFirstChild("Torso") or plr_char:FindFirstChild("UpperTorso") or plr_char:FindFirstChild("LowerTorso") or plr_char:FindFirstChild("HumanoidRootPart") or plr_char:FindFirstChild("Head") or plr_char:FindFirstChildOfClass("BasePart")
             if root_part == nil then continue; end
             
             local head = plr_char:FindFirstChild("Head") or root_part
 
             local plr_screen, scr_z, visible, rage = utility.to_screen(root_part.Position)
             local mag = (root_part.Position - local_player.Character.HumanoidRootPart.Position).Magnitude
+
+            if mag > aimsp_settings.max_dist then continue; end
 
             if aimsp_settings.use_esp and ignored_index == 0 then
                 local col = (aimsp_settings.use_rainbow and utility.get_rainbow()) or white
@@ -743,7 +782,7 @@ frame_wait:Connect(function()
 					local tracer_pos = utility.to_screen(camera.CFrame:pointToWorldSpace(object_space_pos))
                     
                     utility.update_drawing(objects.tracers, plr_char:GetDebugId(), {
-                        Visible = objects.fov.Visible,
+                        Visible = aimsp_settings.use_esp,
                         Thickness = aimsp_settings.esp_thickness,
                         Color = (aimsp_settings.use_rainbow and utility.get_rainbow()) or color3_new(255 / mag, mag / 255, 0),
                         To = vector2_new(tracer_pos.X, tracer_pos.Y),
@@ -755,7 +794,7 @@ frame_wait:Connect(function()
                 if aimsp_settings.box then
                     if a_visible and b_visible and c_visible and d_visible then
                         utility.update_drawing(objects.quads, plr_char:GetDebugId(), {
-                            Visible = objects.fov.Visible,
+                            Visible = aimsp_settings.use_esp,
                             Thickness = aimsp_settings.esp_thickness,
                             Color = col,
                             PointA = point_a_scr,
@@ -778,7 +817,7 @@ frame_wait:Connect(function()
 
                     if a_visible and b_visible then
                         utility.update_drawing(objects.looking_at_tracers, plr_char:GetDebugId(), {
-                            Visible = objects.fov.Visible,
+                            Visible = aimsp_settings.use_esp,
                             Thickness = aimsp_settings.looking_at_tracers.thickness,
                             Color = aimsp_settings.looking_at_tracers.color or white,
                             To = point_a_src,
@@ -790,6 +829,102 @@ frame_wait:Connect(function()
                             Visible = false,
                             instance = "Line";
                         })
+                    end
+                end
+
+                if aimsp_settings.foot_circle then
+                    local root_position = root_part.Position
+
+                    local vertices = utility.get_vertices(vector3_new(root_position.X, root_position.Y - 3, root_position.Z), 4)
+
+                    local point_a, z, a_visible = utility.to_screen(vertices.top)
+                    local point_b, z, b_visible = utility.to_screen(vertices.corner1)
+                    local point_c, z, c_visible = utility.to_screen(vertices.right)
+                    local point_d, z, d_visible = utility.to_screen(vertices.corner2)
+                    local point_e, z, e_visible = utility.to_screen(vertices.bottom)
+                    local point_f, z, f_visible = utility.to_screen(vertices.corner3)
+                    local point_g, z, g_visible = utility.to_screen(vertices.left)
+                    local point_h, z, h_visible = utility.to_screen(vertices.corner4)
+
+                    if a_visible and b_visible and c_visible and d_visible and e_visible and f_visible and g_visible and h_visible then
+                        utility.update_drawing(objects.foot_circles, plr_char:GetDebugId() .. "1", {
+                            Visible = aimsp_settings.use_esp,
+                            Thickness = aimsp_settings.esp_thickness,
+                            Color = (aimsp_settings.use_rainbow and utility.get_rainbow()) or white,
+                            To = point_a,
+                            From = point_b,
+                            instance = "Line";
+                        })
+
+                        utility.update_drawing(objects.foot_circles, plr_char:GetDebugId() .. "2", {
+                            Visible = aimsp_settings.use_esp,
+                            Thickness = aimsp_settings.esp_thickness,
+                            Color = (aimsp_settings.use_rainbow and utility.get_rainbow()) or white,
+                            To = point_b,
+                            From = point_c,
+                            instance = "Line";
+                        })
+
+                        utility.update_drawing(objects.foot_circles, plr_char:GetDebugId() .. "3", {
+                            Visible = aimsp_settings.use_esp,
+                            Thickness = aimsp_settings.esp_thickness,
+                            Color = (aimsp_settings.use_rainbow and utility.get_rainbow()) or white,
+                            To = point_c,
+                            From = point_d,
+                            instance = "Line";
+                        })
+
+                        utility.update_drawing(objects.foot_circles, plr_char:GetDebugId() .. "4", {
+                            Visible = aimsp_settings.use_esp,
+                            Thickness = aimsp_settings.esp_thickness,
+                            Color = (aimsp_settings.use_rainbow and utility.get_rainbow()) or white,
+                            To = point_d,
+                            From = point_e,
+                            instance = "Line";
+                        })
+
+                        utility.update_drawing(objects.foot_circles, plr_char:GetDebugId() .. "5", {
+                            Visible = aimsp_settings.use_esp,
+                            Thickness = aimsp_settings.esp_thickness,
+                            Color = (aimsp_settings.use_rainbow and utility.get_rainbow()) or white,
+                            To = point_e,
+                            From = point_f,
+                            instance = "Line";
+                        })
+
+                        utility.update_drawing(objects.foot_circles, plr_char:GetDebugId() .. "6", {
+                            Visible = aimsp_settings.use_esp,
+                            Thickness = aimsp_settings.esp_thickness,
+                            Color = (aimsp_settings.use_rainbow and utility.get_rainbow()) or white,
+                            To = point_f,
+                            From = point_g,
+                            instance = "Line";
+                        })
+
+                        utility.update_drawing(objects.foot_circles, plr_char:GetDebugId() .. "7", {
+                            Visible = aimsp_settings.use_esp,
+                            Thickness = aimsp_settings.esp_thickness,
+                            Color = (aimsp_settings.use_rainbow and utility.get_rainbow()) or white,
+                            To = point_g,
+                            From = point_h,
+                            instance = "Line";
+                        })
+
+                        utility.update_drawing(objects.foot_circles, plr_char:GetDebugId() .. "8", {
+                            Visible = aimsp_settings.use_esp,
+                            Thickness = aimsp_settings.esp_thickness,
+                            Color = (aimsp_settings.use_rainbow and utility.get_rainbow()) or white,
+                            To = point_h,
+                            From = point_a,
+                            instance = "Line";
+                        })
+                    else
+                        for idx, val in pairs(objects.foot_circles) do
+                            utility.update_drawing(objects.foot_circles, idx, {
+                                Visible = false,
+                                instance = "Line";
+                            })
+                        end
                     end
                 end
 
@@ -818,7 +953,7 @@ frame_wait:Connect(function()
 
                     if visible then
                         utility.update_drawing(objects.labels, plr_char:GetDebugId(), {
-                            Visible = objects.fov.Visible,
+                            Visible = aimsp_settings.use_esp,
                             Color = col,
                             Position = scr_pos,
                             Text = plr_info,
@@ -952,7 +1087,7 @@ frame_wait:Connect(function()
                     Transparency = 1,
                     Thickness = aimsp_settings.esp_thickness,
                     Radius = radius / 2,
-                    Visible = objects.fov.Visible,
+                    Visible = aimsp_settings.use_esp,
                     Color = (debounces.start_aim and green) or white,
                     Position = lock_part.scr_pos,
                     instance = "Circle";
@@ -962,7 +1097,7 @@ frame_wait:Connect(function()
                     utility.update_drawing(objects.look_at, "tracer", {
                         Transparency = 1,
                         Thickness = aimsp_settings.esp_thickness,
-                        Visible = objects.fov.Visible,
+                        Visible = aimsp_settings.use_esp,
                         Color = green,
                         From = center_screen,
                         To = lock_part.scr_pos,
