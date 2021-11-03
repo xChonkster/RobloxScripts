@@ -466,8 +466,6 @@ players.PlayerRemoving:Connect(function(plr)
 end)
 
 uis.InputBegan:Connect(function(key, gmp)
-    if gmp then return end
-
     if key.KeyCode == aimsp_settings.toggle.key and not aimsp_settings.toggle.r_mouse_button then
         debounces.start_aim = not debounces.start_aim
         
@@ -478,17 +476,13 @@ uis.InputBegan:Connect(function(key, gmp)
         aimsp_settings.use_esp = not aimsp_settings.use_esp
 
         utility.update("toggled esp: " .. tostring(aimsp_settings.use_esp))
-    end
-end)
-
-mouse.Button2Down:Connect(function()
-    if aimsp_settings.toggle.r_mouse_button then
+    elseif aimsp_settings.toggle.r_mouse_button and key.UserInputType == Enum.UserInputType.MouseButton2 then
         debounces.start_aim = true
     end
 end)
 
-mouse.Button2Up:Connect(function()
-    if aimsp_settings.toggle.r_mouse_button then
+uis.InputEnded:Connect(function(key, gmp)
+    if key.UserInputType == Enum.UserInputType.MouseButton2 then
         debounces.start_aim = false
     end
 end)
