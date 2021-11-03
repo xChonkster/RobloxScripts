@@ -929,6 +929,13 @@ frame_wait:Connect(function()
                             end
                         end
                     end
+                else
+                    for idx, val in pairs(objects.foot_circles) do
+                        utility.update_drawing(objects.foot_circles, idx, {
+                            Visible = false,
+                            instance = "Line";
+                        })
+                    end
                 end
 
                 local plr_info = ""
