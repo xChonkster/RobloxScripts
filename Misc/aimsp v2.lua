@@ -530,18 +530,18 @@ elseif game.PlaceId == 292439477 then -- phantom forces
                 local is_ghost = pcall(function()
                     return leaderboard.Ghosts.DataFrame.Data[local_player.Name]
                 end)
-
+                
                 return workspace.Players[folders[(is_ghost and "Phantoms") or "Ghosts"]]:GetChildren()
             else
                 local instance_table = {}
 
-                for idx, val in pairs(workspace.Players.Phantoms:GetChildren()) do
+                for idx, val in pairs(workspace.Players["Bright blue"]:GetChildren()) do
                     if val:IsA("Model") then
                         instance_table[#instance_table + 1] = val
                     end
                 end
 
-                for idx, val in pairs(workspace.Players.Ghosts:GetChildren()) do
+                for idx, val in pairs(workspace.Players["Bright orange"]:GetChildren()) do
                     if val:IsA("Model") then
                         instance_table[#instance_table + 1] = val
                     end
