@@ -1,3 +1,6 @@
+if colorprint then return end
+getgenv().colorprint = true
+
 local core_gui = game:GetService("CoreGui")
 
 local function run()
