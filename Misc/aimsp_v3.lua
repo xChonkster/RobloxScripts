@@ -754,7 +754,7 @@ local function stepped()
                     end
                 end
 
-                if options.overhead then -- todo: ew
+                if options.overhead then
                     local text = "";
 
                     if options.health then
@@ -833,7 +833,7 @@ local function stepped()
 
                 for _, obj in pairs(children) do
                     if is_a(obj, "BasePart") then
-                        local part_screen, part_in_screen, _, rage = to_screen(obj.Position) -- cba to fix this shit
+                        local part_screen, part_in_screen, _, rage = to_screen(obj.Position)
 
                         if can_hit(cam.CFrame.p, obj) and (part_in_screen or rage) and (is_inside_fov(part_screen) or rage) then
                             local set = {
