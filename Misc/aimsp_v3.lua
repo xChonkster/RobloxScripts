@@ -92,7 +92,7 @@ local green = color3_rgb(0, 255, 0)
 
 local dummy_part = instance_new("Part", nil)
 
-drawing_new("Square").Size = vector2_new(0, 0) -- initialize drawing lib
+drawing_new("Square").Visible = false -- initialize drawing lib
 
 local pi = math.pi
 
