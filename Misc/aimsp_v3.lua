@@ -668,6 +668,7 @@ local function stepped()
                 or find_first_child(plr_char, "HumanoidRootPart") 
                 or find_first_child(plr_char, "Head") 
                 or find_first_child_of_class(plr_char, "BasePart")
+                or find_first_child_of_class(plr_char, "Part")
                 
             if root_part == nil then remove_esp(id); continue; end
             if not is_a(root_part, "BasePart") then remove_esp(id); continue; end
@@ -754,7 +755,7 @@ local function stepped()
                     end
                 end
 
-                if options.overhead then
+                if options.overhead then -- todo: ew
                     local text = "";
 
                     if options.health then
@@ -833,7 +834,7 @@ local function stepped()
 
                 for _, obj in pairs(children) do
                     if is_a(obj, "BasePart") then
-                        local part_screen, part_in_screen, _, rage = to_screen(obj.Position)
+                        local part_screen, part_in_screen, _, rage = to_screen(obj.Position) -- cba to fix this shit
 
                         if can_hit(cam.CFrame.p, obj) and (part_in_screen or rage) and (is_inside_fov(part_screen) or rage) then
                             local set = {
